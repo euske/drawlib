@@ -25,7 +25,7 @@ int main(void)
     refresh();
     return 0;
 }
-'''
+```
 
 コンパイル方法
 --------------
