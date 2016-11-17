@@ -33,6 +33,9 @@ extern void refresh(void);
 extern void sleep(int msec);
 /* getkey(): 前回のrefresh()時に押されていたキーの番号を返す。 */
 extern int getkey(void);
+/* isopen(): ウィンドウが開いていれば 1 を返す。 */
+extern int isopen(void);
+
 
 /*
  * 内部的な関数およびデータ型。
@@ -421,11 +424,20 @@ void sleep(int msec)
 /* getkey(): 前回のrefresh()時に押されていたキーの番号を返す。 */
 int getkey()
 {
-    if (SCR1 != NULL && IsWindowVisible(SCR1->hWnd)) {
+    if (SCR1 != NULL) {
 	return SCR1->key;
     }
     return -1;
 }
+
+/* isopen(): ウィンドウが開いていれば 1 を返す。 */
+int isopen(void)
+{
+    if (SCR1 != NULL) {
+	return (SCR1->hWnd != NULL);
+    }
+    return -1;
+}    
 
 
 /*
@@ -471,11 +483,9 @@ void test3(void)
     x = 100;
     y = 100;
     setcolor(0, 0, 255);
-    while (1) {
+    while (isopen()) {
 	k = getkey();
-	if (k < 0) {
-	    break;
-	} else if (k == VK_LEFT) {
+	if (k == VK_LEFT) {
 	    x = x - 1;
 	} else if (k == VK_RIGHT) {
 	    x = x + 1;
