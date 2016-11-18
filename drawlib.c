@@ -19,6 +19,8 @@
 
 /* initwin(タイトル, 幅, 高さ): ウィンドウを開く。 */
 extern int initwin(const char* title, int width, int height);
+/* closewin(): ウィンドウを閉じる。 */
+extern void closewin(void);
 /* setcolor(R値, G値, B値): 現在の色を設定する。 */
 extern void setcolor(int r, int g, int b);
 /* pset(x座標, y座標): 指定された位置にピクセルを描画する。 */
@@ -348,7 +350,15 @@ static int ScreenInitialize(Screen* self, int width, int height, const char* nam
  * ライブラリAPI
  */
 static Screen* SCR1 = NULL;
-static void terminate(void);
+
+/* uninit(): プログラム終了時の処理。 */
+static void uninit(void)
+{
+    if (SCR1 != NULL) {
+        ScreenUninitialize(SCR1);
+        SCR1 = NULL;
+    }
+}  
 
 /* initwin(タイトル, 幅, 高さ): ウィンドウを開く。 */
 int initwin(const char* title, int width, int height)
@@ -357,21 +367,21 @@ int initwin(const char* title, int width, int height)
         InitWndClass();
         SCR1 = (Screen*) malloc(sizeof(Screen));
         if (SCR1 != NULL) {
-            atexit(terminate);
+            atexit(uninit);
             return ScreenInitialize(SCR1, width, height, title);
         }
     }
     return -1;
 }
 
-/* terminate(): プログラム終了時の処理。 */
-void terminate(void)
+/* closewin(): ウィンドウを閉じる。 */
+void closewin(void)
 {
-    if (SCR1 != NULL) {
-        ScreenUninitialize(SCR1);
-        SCR1 = NULL;
+    if (SCR1 != NULL && SCR1->hWnd != NULL) {
+        PostMessage(SCR1->hWnd, WM_CLOSE, 0, 0);
+	uninit();
     }
-}  
+}
 
 /* setcolor(R値, G値, B値): 現在の色を設定する。 */
 void setcolor(int r, int g, int b)
@@ -436,7 +446,7 @@ int isopen(void)
     if (SCR1 != NULL) {
 	return (SCR1->hWnd != NULL);
     }
-    return -1;
+    return 0;
 }    
 
 
@@ -485,7 +495,9 @@ void test3(void)
     setcolor(0, 0, 255);
     while (isopen()) {
 	k = getkey();
-	if (k == VK_LEFT) {
+	if (k == VK_ESCAPE) {
+	    closewin();
+	} else if (k == VK_LEFT) {
 	    x = x - 1;
 	} else if (k == VK_RIGHT) {
 	    x = x + 1;
