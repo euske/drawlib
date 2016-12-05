@@ -108,6 +108,7 @@ static int ScreenFillRect(Screen* self, int x, int y, int w, int h)
             hBrush = CreateSolidBrush(self->color);
             SetRect(&rect, x, y, x+w, y+h);
             FillRect(self->hDC, &rect, hBrush);
+            DeleteObject(hBrush);
             LeaveCriticalSection(&self->mutex);
         }
         return 0;
@@ -202,19 +203,19 @@ static LRESULT CALLBACK screenWndProc(
         {
             Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
             if (self != NULL) {
-		self->keybuf = wParam;
-	    }
-	}
-	return 0;
-	
+                self->keybuf = wParam;
+            }
+        }
+        return 0;
+        
     case WM_KEYUP:
         {
             Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
             if (self != NULL) {
-		self->keybuf = 0;
-	    }
-	}
-	return 0;
+                self->keybuf = 0;
+            }
+        }
+        return 0;
         
     case WM_CREATE:
         /* ウィンドウ作成時に、描画バッファを初期化する。 */
@@ -379,7 +380,7 @@ void closewin(void)
 {
     if (SCR1 != NULL && SCR1->hWnd != NULL) {
         PostMessage(SCR1->hWnd, WM_CLOSE, 0, 0);
-	uninit();
+        uninit();
     }
 }
 
@@ -418,10 +419,10 @@ void clear()
 /* refresh(): 現在の変更を画面に反映する。 */
 void refresh(void)
 {
-    if (SCR1 != NULL) {
+    if (SCR1 != NULL && SCR1->hWnd != NULL) {
         InvalidateRect(SCR1->hWnd, NULL, FALSE);
         UpdateWindow(SCR1->hWnd);
-	SCR1->key = SCR1->keybuf;
+        SCR1->key = SCR1->keybuf;
     }
 }
 
@@ -435,7 +436,7 @@ void sleep(int msec)
 int getkey()
 {
     if (SCR1 != NULL) {
-	return SCR1->key;
+        return SCR1->key;
     }
     return -1;
 }
@@ -444,7 +445,7 @@ int getkey()
 int isopen(void)
 {
     if (SCR1 != NULL) {
-	return (SCR1->hWnd != NULL);
+        return (SCR1->hWnd != NULL);
     }
     return 0;
 }    
@@ -494,18 +495,18 @@ void test3(void)
     y = 100;
     setcolor(0, 0, 255);
     while (isopen()) {
-	k = getkey();
-	if (k == VK_ESCAPE) {
-	    closewin();
-	} else if (k == VK_LEFT) {
-	    x = x - 1;
-	} else if (k == VK_RIGHT) {
-	    x = x + 1;
-	} else if (k == VK_UP) {
-	    y = y - 1;
-	} else if (k == VK_DOWN) {
-	    y = y + 1;
-	}
+        k = getkey();
+        if (k == VK_ESCAPE) {
+            closewin();
+        } else if (k == VK_LEFT) {
+            x = x - 1;
+        } else if (k == VK_RIGHT) {
+            x = x + 1;
+        } else if (k == VK_UP) {
+            y = y - 1;
+        } else if (k == VK_DOWN) {
+            y = y + 1;
+        }
         fill(x, y, 25, 25);
         refresh();
         sleep(20);
