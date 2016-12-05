@@ -75,11 +75,11 @@ static HINSTANCE hInstance;
 static int clamp(int v0, int v, int v1)
 {
     if (v < v0) {
-        return v0;
+	return v0;
     } else if (v1 < v) {
-        return v1;
+	return v1;
     } else {
-        return v;
+	return v;
     }
 }
 
@@ -101,17 +101,17 @@ static int ScreenFillRect(Screen* self, int x, int y, int w, int h)
     w = clamp(0, x+w, self->width) - x;
     h = clamp(0, y+h, self->height) - y;
     if (self->hDC != NULL) {
-        if (0 < w && 0 < h) {
-            HBRUSH hBrush;
-            RECT rect;
-            EnterCriticalSection(&self->mutex);
-            hBrush = CreateSolidBrush(self->color);
-            SetRect(&rect, x, y, x+w, y+h);
-            FillRect(self->hDC, &rect, hBrush);
-            DeleteObject(hBrush);
-            LeaveCriticalSection(&self->mutex);
-        }
-        return 0;
+	if (0 < w && 0 < h) {
+	    HBRUSH hBrush;
+	    RECT rect;
+	    EnterCriticalSection(&self->mutex);
+	    hBrush = CreateSolidBrush(self->color);
+	    SetRect(&rect, x, y, x+w, y+h);
+	    FillRect(self->hDC, &rect, hBrush);
+	    DeleteObject(hBrush);
+	    LeaveCriticalSection(&self->mutex);
+	}
+	return 0;
     }
     return -1;
 }
@@ -120,13 +120,13 @@ static int ScreenFillRect(Screen* self, int x, int y, int w, int h)
 static int ScreenSetPixel(Screen* self, int x, int y)
 {
     if (self->hDC != NULL) {
-        if (0 <= x && x < self->width &&
-            0 <= y && y < self->height) {
-            EnterCriticalSection(&self->mutex);
-            SetPixel(self->hDC, x, y, self->color);
-            LeaveCriticalSection(&self->mutex);
-        }
-        return 0;
+	if (0 <= x && x < self->width &&
+	    0 <= y && y < self->height) {
+	    EnterCriticalSection(&self->mutex);
+	    SetPixel(self->hDC, x, y, self->color);
+	    LeaveCriticalSection(&self->mutex);
+	}
+	return 0;
     }
     return -1;
 }
@@ -135,11 +135,11 @@ static int ScreenSetPixel(Screen* self, int x, int y)
 static int ScreenRepaint(Screen* self, HDC hDC)
 {
     if (self->hDC != NULL) {
-        EnterCriticalSection(&self->mutex);
-        BitBlt(hDC, 0, 0, self->width, self->height,
-               self->hDC, 0, 0, SRCCOPY);
-        LeaveCriticalSection(&self->mutex);
-        return 0;
+	EnterCriticalSection(&self->mutex);
+	BitBlt(hDC, 0, 0, self->width, self->height,
+	       self->hDC, 0, 0, SRCCOPY);
+	LeaveCriticalSection(&self->mutex);
+	return 0;
     }
     return -1;
 }
@@ -148,12 +148,12 @@ static int ScreenRepaint(Screen* self, HDC hDC)
 static int ScreenUninitBitmap(Screen* self)
 {
     if (self->hBitmap != NULL) {
-        DeleteObject(self->hBitmap);
-        self->hBitmap = NULL;
+	DeleteObject(self->hBitmap);
+	self->hBitmap = NULL;
     }
     if (self->hDC != NULL) {
-        DeleteDC(self->hDC);
-        self->hDC = NULL;
+	DeleteDC(self->hDC);
+	self->hDC = NULL;
     }
     return 0;
 }
@@ -163,13 +163,13 @@ static int ScreenInitBitmap(Screen* self, HDC hDC)
 {
     self->hDC = CreateCompatibleDC(hDC);
     if (self->hDC != NULL) {
-        self->hBitmap = CreateCompatibleBitmap(
-            hDC, self->width, self->height);
-        if (self->hBitmap != NULL) {
-            SelectObject(self->hDC, self->hBitmap);
-            ScreenSetColor(self, 255, 255, 255);
-            return ScreenFillRect(self, 0, 0, self->width, self->height);
-        }
+	self->hBitmap = CreateCompatibleBitmap(
+	    hDC, self->width, self->height);
+	if (self->hBitmap != NULL) {
+	    SelectObject(self->hDC, self->hBitmap);
+	    ScreenSetColor(self, 255, 255, 255);
+	    return ScreenFillRect(self, 0, 0, self->width, self->height);
+	}
     }
     /* エラーが発生した場合、資源を解放する。 */
     ScreenUninitBitmap(self);
@@ -183,73 +183,73 @@ static LRESULT CALLBACK screenWndProc(
     /* イベントの種類によって分岐する。 */
     switch (uMsg) {
     case WM_PAINT:
-        /* 再描画イベントが来たら描画する。 */
-        {
-            Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-            if (self != NULL) {
-                PAINTSTRUCT ps;
-                HDC hDC = BeginPaint(hWnd, &ps);
-                ScreenRepaint(self, hDC);
-                EndPaint(hWnd, &ps);
-            }
-        }
-        return 0;
+	/* 再描画イベントが来たら描画する。 */
+	{
+	    Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	    if (self != NULL) {
+		PAINTSTRUCT ps;
+		HDC hDC = BeginPaint(hWnd, &ps);
+		ScreenRepaint(self, hDC);
+		EndPaint(hWnd, &ps);
+	    }
+	}
+	return 0;
 
     case WM_ERASEBKGND:
-        /* 背景は描画しない。 */
-        return 1;
+	/* 背景は描画しない。 */
+	return 1;
 
     case WM_KEYDOWN:
-        {
-            Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-            if (self != NULL) {
-                self->keybuf = wParam;
-            }
-        }
-        return 0;
-        
+	{
+	    Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	    if (self != NULL) {
+		self->keybuf = wParam;
+	    }
+	}
+	return 0;
+	
     case WM_KEYUP:
-        {
-            Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-            if (self != NULL) {
-                self->keybuf = 0;
-            }
-        }
-        return 0;
-        
+	{
+	    Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	    if (self != NULL) {
+		self->keybuf = 0;
+	    }
+	}
+	return 0;
+	
     case WM_CREATE:
-        /* ウィンドウ作成時に、描画バッファを初期化する。 */
-        {
-            CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
-            Screen* self = (Screen*)(cs->lpCreateParams);
-            if (self != NULL) {
-                HDC hDC = GetDC(hWnd);
-                SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)self);
-                ScreenInitBitmap(self, hDC);
-                ReleaseDC(hWnd, hDC);
-            }
-        }
-        return 0;
-        
+	/* ウィンドウ作成時に、描画バッファを初期化する。 */
+	{
+	    CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
+	    Screen* self = (Screen*)(cs->lpCreateParams);
+	    if (self != NULL) {
+		HDC hDC = GetDC(hWnd);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)self);
+		ScreenInitBitmap(self, hDC);
+		ReleaseDC(hWnd, hDC);
+	    }
+	}
+	return 0;
+	
     case WM_CLOSE:
-        /* ウィンドウ消去時に、描画バッファを解放する。 */
-        {
-            Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-            if (self != NULL) {
-                ScreenUninitBitmap(self);
-            }
-        }
-        DestroyWindow(hWnd);
-        return 0;
-        
+	/* ウィンドウ消去時に、描画バッファを解放する。 */
+	{
+	    Screen* self = (Screen*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	    if (self != NULL) {
+		ScreenUninitBitmap(self);
+	    }
+	}
+	DestroyWindow(hWnd);
+	return 0;
+	
     case WM_DESTROY:
-        /* ウィンドウが閉じられた場合、スレッドを終了する。 */
-        PostQuitMessage(0);
-        return 0;
-        
+	/* ウィンドウが閉じられた場合、スレッドを終了する。 */
+	PostQuitMessage(0);
+	return 0;
+	
     default:
-        /* それ以外のイベント。 */
-        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	/* それ以外のイベント。 */
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
     }
 }
 
@@ -257,17 +257,17 @@ static LRESULT CALLBACK screenWndProc(
 static int InitWndClass()
 {
     if (aScreenWindowClass == 0) {
-        /* ウィンドウクラスが未登録であれば登録する。 */
-        static WNDCLASS klass;
-        hInstance = GetModuleHandle(NULL);
-        ZeroMemory(&klass, sizeof(klass));
-        klass.lpfnWndProc = screenWndProc;
-        klass.hInstance = hInstance;
-        klass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-        klass.hCursor = LoadCursor(NULL, IDC_ARROW);
-        klass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-        klass.lpszClassName = "screenWindowClass";
-        aScreenWindowClass = RegisterClass(&klass);
+	/* ウィンドウクラスが未登録であれば登録する。 */
+	static WNDCLASS klass;
+	hInstance = GetModuleHandle(NULL);
+	ZeroMemory(&klass, sizeof(klass));
+	klass.lpfnWndProc = screenWndProc;
+	klass.hInstance = hInstance;
+	klass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	klass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	klass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+	klass.lpszClassName = "screenWindowClass";
+	aScreenWindowClass = RegisterClass(&klass);
     }
     return 0;
 }
@@ -285,24 +285,24 @@ static DWORD WINAPI screenMainProc(LPVOID params0)
     SetRect(&bounds, 0, 0, self->width, self->height);
     AdjustWindowRect(&bounds, dwStyle, FALSE);
     self->hWnd = CreateWindow(
-        (LPCSTR)aScreenWindowClass,
-        self->name, dwStyle,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        bounds.right-bounds.left, bounds.bottom-bounds.top,
-        NULL, NULL, hInstance, self);
+	(LPCSTR)aScreenWindowClass,
+	self->name, dwStyle,
+	CW_USEDEFAULT, CW_USEDEFAULT,
+	bounds.right-bounds.left, bounds.bottom-bounds.top,
+	NULL, NULL, hInstance, self);
     
     /* 作成したウィンドウを表示する。 */
     if (self->hWnd != NULL) {
-        ShowWindow(self->hWnd, SW_SHOWNORMAL);
-        UpdateWindow(self->hWnd);
-        params->retval = 0;
+	ShowWindow(self->hWnd, SW_SHOWNORMAL);
+	UpdateWindow(self->hWnd);
+	params->retval = 0;
     }
     SetEvent(params->hEvent);
     
     /* イベントループ。 */
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+	TranslateMessage(&msg);
+	DispatchMessage(&msg);
     }
     self->hWnd = NULL;
     return msg.wParam;
@@ -312,9 +312,9 @@ static DWORD WINAPI screenMainProc(LPVOID params0)
 static int ScreenUninitialize(Screen* self)
 {
     if (self->hThread != NULL) {
-        WaitForSingleObject(self->hThread, INFINITE);
-        CloseHandle(self->hThread);
-        self->hThread = NULL;
+	WaitForSingleObject(self->hThread, INFINITE);
+	CloseHandle(self->hThread);
+	self->hThread = NULL;
     }
     return 0;
 }
@@ -334,13 +334,13 @@ static int ScreenInitialize(Screen* self, int width, int height, const char* nam
     params.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     params.retval = -1;
     if (params.hEvent != NULL) {
-        /* イベント処理用のスレッドを作成。 */
-        self->hThread = CreateThread(NULL, 0, screenMainProc, &params, 0, NULL);
-        if (self->hThread != NULL) {
-            /* 準備完了まで待つ。 */
-            WaitForSingleObject(params.hEvent, INFINITE);
-        }
-        CloseHandle(params.hEvent);
+	/* イベント処理用のスレッドを作成。 */
+	self->hThread = CreateThread(NULL, 0, screenMainProc, &params, 0, NULL);
+	if (self->hThread != NULL) {
+	    /* 準備完了まで待つ。 */
+	    WaitForSingleObject(params.hEvent, INFINITE);
+	}
+	CloseHandle(params.hEvent);
     }
     
     return params.retval;
@@ -356,8 +356,8 @@ static Screen* SCR1 = NULL;
 static void uninit(void)
 {
     if (SCR1 != NULL) {
-        ScreenUninitialize(SCR1);
-        SCR1 = NULL;
+	ScreenUninitialize(SCR1);
+	SCR1 = NULL;
     }
 }  
 
@@ -365,12 +365,12 @@ static void uninit(void)
 int initwin(const char* title, int width, int height)
 {
     if (SCR1 == NULL) {
-        InitWndClass();
-        SCR1 = (Screen*) malloc(sizeof(Screen));
-        if (SCR1 != NULL) {
-            atexit(uninit);
-            return ScreenInitialize(SCR1, width, height, title);
-        }
+	InitWndClass();
+	SCR1 = (Screen*) malloc(sizeof(Screen));
+	if (SCR1 != NULL) {
+	    atexit(uninit);
+	    return ScreenInitialize(SCR1, width, height, title);
+	}
     }
     return -1;
 }
@@ -379,8 +379,8 @@ int initwin(const char* title, int width, int height)
 void closewin(void)
 {
     if (SCR1 != NULL && SCR1->hWnd != NULL) {
-        PostMessage(SCR1->hWnd, WM_CLOSE, 0, 0);
-        uninit();
+	PostMessage(SCR1->hWnd, WM_CLOSE, 0, 0);
+	uninit();
     }
 }
 
@@ -388,7 +388,7 @@ void closewin(void)
 void setcolor(int r, int g, int b)
 {
     if (SCR1 != NULL) {
-        ScreenSetColor(SCR1, r, g, b);
+	ScreenSetColor(SCR1, r, g, b);
     }
 }
 
@@ -396,7 +396,7 @@ void setcolor(int r, int g, int b)
 void pset(int x, int y)
 {
     if (SCR1 != NULL) {
-        ScreenSetPixel(SCR1, x, y);
+	ScreenSetPixel(SCR1, x, y);
     }
 }
 
@@ -404,7 +404,7 @@ void pset(int x, int y)
 void fill(int x, int y, int w, int h)
 {
     if (SCR1 != NULL) {
-        ScreenFillRect(SCR1, x, y, w, h);
+	ScreenFillRect(SCR1, x, y, w, h);
     }
 }
 
@@ -412,7 +412,7 @@ void fill(int x, int y, int w, int h)
 void clear()
 {
     if (SCR1 != NULL) {
-        ScreenFillRect(SCR1, 0, 0, SCR1->width, SCR1->height);
+	ScreenFillRect(SCR1, 0, 0, SCR1->width, SCR1->height);
     }
 }
 
@@ -420,9 +420,9 @@ void clear()
 void refresh(void)
 {
     if (SCR1 != NULL && SCR1->hWnd != NULL) {
-        InvalidateRect(SCR1->hWnd, NULL, FALSE);
-        UpdateWindow(SCR1->hWnd);
-        SCR1->key = SCR1->keybuf;
+	InvalidateRect(SCR1->hWnd, NULL, FALSE);
+	UpdateWindow(SCR1->hWnd);
+	SCR1->key = SCR1->keybuf;
     }
 }
 
@@ -436,7 +436,7 @@ void sleep(int msec)
 int getkey()
 {
     if (SCR1 != NULL) {
-        return SCR1->key;
+	return SCR1->key;
     }
     return -1;
 }
@@ -445,7 +445,7 @@ int getkey()
 int isopen(void)
 {
     if (SCR1 != NULL) {
-        return (SCR1->hWnd != NULL);
+	return (SCR1->hWnd != NULL);
     }
     return 0;
 }    
@@ -459,10 +459,10 @@ void test1(void)
     int x, y;
     initwin("test1", 400, 300);
     for (x = 0; x < 255; x++) {
-        for (y = 0; y < 255; y++) {
-            setcolor(x, 255, 255-y);
-            pset(x, y);
-        }
+	for (y = 0; y < 255; y++) {
+	    setcolor(x, 255, 255-y);
+	    pset(x, y);
+	}
     }
     refresh();
 }
@@ -474,16 +474,16 @@ void test2(void)
     y = 0;
     vy = 1;
     for (x = 0; x < 500; x++) {
-        setcolor(255, x % 256, 0);
-        fill(x, y, 100, 100);
-        if (y <= 0) {
-            vy = 1;
-        } else if (300 <= y) {
-            vy = -1;
-        }
-        y = y + vy*4;
-        refresh();
-        sleep(20);
+	setcolor(255, x % 256, 0);
+	fill(x, y, 100, 100);
+	if (y <= 0) {
+	    vy = 1;
+	} else if (300 <= y) {
+	    vy = -1;
+	}
+	y = y + vy*4;
+	refresh();
+	sleep(20);
     }
 }
 
@@ -495,20 +495,20 @@ void test3(void)
     y = 100;
     setcolor(0, 0, 255);
     while (isopen()) {
-        k = getkey();
-        if (k == VK_ESCAPE) {
-            closewin();
-        } else if (k == VK_LEFT) {
-            x = x - 1;
-        } else if (k == VK_RIGHT) {
-            x = x + 1;
-        } else if (k == VK_UP) {
-            y = y - 1;
-        } else if (k == VK_DOWN) {
-            y = y + 1;
-        }
-        fill(x, y, 25, 25);
-        refresh();
-        sleep(20);
+	k = getkey();
+	if (k == VK_ESCAPE) {
+	    closewin();
+	} else if (k == VK_LEFT) {
+	    x = x - 1;
+	} else if (k == VK_RIGHT) {
+	    x = x + 1;
+	} else if (k == VK_UP) {
+	    y = y - 1;
+	} else if (k == VK_DOWN) {
+	    y = y + 1;
+	}
+	fill(x, y, 25, 25);
+	refresh();
+	sleep(20);
     }
 }
