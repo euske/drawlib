@@ -53,3 +53,5 @@ public class Test1 {
 --------------
 
     C:\> cl test1.c drawlib.c
+
+    C:\> javac Test1.Java
