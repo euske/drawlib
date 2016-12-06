@@ -7,7 +7,7 @@ import java.awt.image.*;
 
 //  DrawLib
 //
-public class DrawLib extends Frame
+public class DrawLib extends Canvas
     implements ActionListener, WindowListener, KeyListener {
 
     private BufferedImage _image;
@@ -16,12 +16,15 @@ public class DrawLib extends Frame
     public DrawLib(String title, int width, int height) {
 	_image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	_graphics = _image.getGraphics();
-	addKeyListener(this);
-	addWindowListener(this);
-	setTitle(title);
 	setSize(width, height);
-	setResizable(false);
-	setVisible(true);
+	Frame frame = new Frame();
+	frame.addKeyListener(this);
+	frame.addWindowListener(this);
+	frame.setTitle(title);
+	frame.setResizable(false);
+	frame.add(this);
+	frame.pack();
+	frame.setVisible(true);
     }
 
     public void init() {
@@ -32,6 +35,10 @@ public class DrawLib extends Frame
 	System.out.println("update");
     }
 
+    public void refresh() {
+	repaint();
+    }
+    
     public void paint(Graphics g) {
 	super.paint(g);
 	System.out.println("paint");
@@ -43,14 +50,11 @@ public class DrawLib extends Frame
     public void keyTyped(KeyEvent e) { }
 
     public void windowOpened(WindowEvent e) {
-	requestFocusInWindow();
+	e.getWindow().requestFocusInWindow();
 	init();
-	synchronized (this) {
-	    notify();
-	}
     }
     public void windowClosing(WindowEvent e) {
-	dispose();
+	e.getWindow().dispose();
     }
     public void windowClosed(WindowEvent e) { }
     public void windowActivated(WindowEvent e) { }
@@ -69,7 +73,7 @@ public class DrawLib extends Frame
 
     public synchronized void clear() {
 	System.out.println("clear");
-	_graphics.fillRect(x, y, w, h);
+	_graphics.fillRect(0, 0, _image.getWidth(), _image.getHeight());
     }
 
     public synchronized void setColor(int r, int g, int b) {
@@ -77,11 +81,11 @@ public class DrawLib extends Frame
     }
 
     public static void main(String[] args) {
-	DrawLib window = new DrawLib("test", 400, 300);
-	window.setColor(255,0,0);
-	window.fill(100, 100, 100, 100);
-	window.setColor(0,0,255);
-	window.fill(200, 200, 100, 100);
-	window.repaint();
+        DrawLib d = new DrawLib("test", 400, 300);
+        d.setColor(255, 0, 0);
+        d.fill(50, 100, 200, 100);
+        d.setColor(0, 0, 255);
+        d.fill(150, 150, 150, 100);
+        d.refresh();
     }
 }
