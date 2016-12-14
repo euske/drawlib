@@ -29,6 +29,7 @@ public class DrawLib extends Canvas
     public DrawLib(String title, int width, int height) {
 	_image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	_graphics = _image.getGraphics();
+	_open = true;
 	setSize(width, height);
 	// ウィンドウの枠を作成・表示。
 	// (実際には、Canvas クラス全体がウィンドウで囲まれる)
@@ -95,6 +96,11 @@ public class DrawLib extends Canvas
     // fill(x座標, y座標, 幅, 高さ): 指定された位置・大きさの矩形を描画する。
     public void fill(int x, int y, int w, int h) {
 	_graphics.fillRect(x, y, w, h);
+    }
+
+    // line(x1座標, y1座標, x2座標, y2座標): 直線を描画する。
+    public void line(int x1, int y1, int x2, int y2) {
+	_graphics.drawLine(x1, y1, x2, y2);
     }
 
     // clear(): 画面を消去する。
@@ -187,8 +193,29 @@ public class DrawLib extends Canvas
 	    d.sleep(20);
 	}
     }
-    
-    public static void main(String[] args) {
-	test1();
+
+    public static void test3() {
+        DrawLib d = new DrawLib("test3", 400, 300);
+	int x, y, k;
+	x = 100;
+	y = 100;
+	d.setColor(0, 0, 255);
+	while (d.isOpen()) {
+	    k = d.getKey();
+	    if (k == KeyEvent.VK_ESCAPE) {
+		break;
+	    } else if (k == KeyEvent.VK_LEFT) {
+		x = x - 1;
+	    } else if (k == KeyEvent.VK_RIGHT) {
+		x = x + 1;
+	    } else if (k == KeyEvent.VK_UP) {
+		y = y - 1;
+	    } else if (k == KeyEvent.VK_DOWN) {
+		y = y + 1;
+	    }
+	    d.fill(x, y, 25, 25);
+	    d.refresh();
+	    d.sleep(20);
+	}
     }
 }
